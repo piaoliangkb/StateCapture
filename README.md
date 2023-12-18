@@ -50,6 +50,10 @@ Before you can use this tool, ensure you have the following installed:
    python start.py
    ```
 
+3. Stop the process whenever you need.
+
+   TIPS: if the states don't be captured at first, please wait for a minute or just stop and restart again.
+
 ## Output
 
 ```sh
