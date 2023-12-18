@@ -8,7 +8,7 @@ from adapter import Adapter
 
 
 MINICAP_REMOTE_ADDR = "localabstract:minicap"
-ROTATION_CHECK_INTERVAL_S = 1 # Check rotation once per second
+ROTATION_CHECK_INTERVAL_S = 0.1 # Check rotation once per second
 
 
 class MinicapException(Exception):
@@ -32,7 +32,7 @@ class Minicap(Adapter):
         self.host = "localhost"
 
         if device is None:
-            from droidbot.device import Device
+            from device import Device
             device = Device()
         self.device = device
         self.port = 27183
@@ -221,17 +221,34 @@ class Minicap(Adapter):
         self.logger.debug("Received an image at %s" % self.last_screen_time)
         self.check_rotation()
 
+    # def check_rotation(self):
+    #     current_time = datetime.now()
+    #     if (current_time - self.last_rotation_check_time).total_seconds() < ROTATION_CHECK_INTERVAL_S:
+    #         return
+
+    #     display = self.device.get_display_info(refresh=True)
+    #     if 'orientation' in display:
+    #         cur_orientation = display['orientation'] * 90
+    #         if cur_orientation != self.orientation:
+    #             self.device.handle_rotation()
+    #     self.last_rotation_check_time = current_time
     def check_rotation(self):
         current_time = datetime.now()
-        if (current_time - self.last_rotation_check_time).total_seconds() < ROTATION_CHECK_INTERVAL_S:
-            return
-
-        display = self.device.get_display_info(refresh=True)
-        if 'orientation' in display:
-            cur_orientation = display['orientation'] * 90
-            if cur_orientation != self.orientation:
-                self.device.handle_rotation()
-        self.last_rotation_check_time = current_time
+        if (current_time - self.last_rotation_check_time).total_seconds() > ROTATION_CHECK_INTERVAL_S:
+            print("Checking rotation...")
+            display = self.device.get_display_info(refresh=True)
+            print(f"display is {display}")
+            if 'orientation' in display:
+                print(f"orientation is {display['orientation']}")
+                new_orientation = display['orientation'] * 90
+                if new_orientation != self.orientation:
+                    print("Rotation changed from %d to %d" % (self.orientation, new_orientation))
+                    self.orientation = new_orientation
+                    self.disconnect()
+                    print("Minicap Reconnecting Due to Rotation Change...")
+                    self.connect()
+                    print("Minicap Reconnected.")
+            self.last_rotation_check_time = current_time
 
     def check_connectivity(self):
         """

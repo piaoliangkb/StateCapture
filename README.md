@@ -50,9 +50,15 @@ Before you can use this tool, ensure you have the following installed:
    python start.py
    ```
 
-3. Stop the process whenever you need.
+3. It takes a few seconds to build the connection, so please wait until you see this sentence printed in the terminal:
 
-   TIPS: if the states don't be captured at first, please wait for a minute or just stop and restart again.
+   ```sh
+   Valid data detected. Press enter when you are ready to capture...
+   ```
+
+   Please prepare your to-be-detected app and press the 'enter', the states will be saved to the directory then.
+
+4. Stop the process (Ctrl + C) whenever you need.
 
 ## Output
 

@@ -7,7 +7,7 @@ from datetime import datetime
 import subprocess
 
 DEVICE_SERIAL = None
-FREQUENCY = 10
+FREQUENCY = 0.5
 LOCAL_VH_SAVE_PATH = "./captured_data/view_hierarchy" 
 LOCAL_SCREENSHOT_SAVE_PATH = "./captured_data/screenshot"
 CSV_FILE_PATH = "./captured_data/captured_states.csv"
@@ -34,6 +34,7 @@ def append_to_csv(data_row, file_path):
 
 def capture_view_hierarchy_loop(device):
     interval = 1.0 / FREQUENCY
+    data_capture_allowed = False
 
     if not os.path.exists(LOCAL_VH_SAVE_PATH):
         os.makedirs(LOCAL_VH_SAVE_PATH)
@@ -42,15 +43,26 @@ def capture_view_hierarchy_loop(device):
     if not os.path.exists(CSV_FILE_PATH):
         append_to_csv(["Timestamp", "Activity Name", "View Hierarchy File", "Screenshot File"], CSV_FILE_PATH)
 
-    while True:
-        current_time = time.time()
-        next_capture_time = current_time + interval
-        tag = datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
-        view_hierarchy = device.get_views()
-        screenshot_path = device.take_screenshot(tag)
-        top_activity_name = device.get_top_activity_name()
+    print("Monitoring started. Waiting for valid data...")
 
-        if view_hierarchy and screenshot_path:
+    while True:
+        tag = datetime.now().strftime("%Y-%m-%d_%H:%M:%S.%f")[:-3]
+        
+        if not data_capture_allowed:
+            view_hierarchy = device.get_views()
+            if view_hierarchy is not None:
+                input("Valid data detected. Press enter when you are ready to capture...")
+                data_capture_allowed = True
+                current_time = time.time()
+                next_capture_time = current_time + interval
+            else:
+                time.sleep(interval)
+                continue
+        
+        if data_capture_allowed:
+            view_hierarchy = device.get_views()
+            screenshot_path = device.take_screenshot(tag)
+            top_activity_name = device.get_top_activity_name()
             vh_file_name = f"view_hierarchy_{tag}.json"
             vh_file_path = os.path.join(LOCAL_VH_SAVE_PATH, vh_file_name)
             ss_file_name = f"screenshot_{tag}.jpg"
@@ -58,17 +70,18 @@ def capture_view_hierarchy_loop(device):
 
             with open(vh_file_path, "w") as file:
                 json.dump(view_hierarchy, file)
-            
+                
             os.rename(screenshot_path, ss_file_path)
 
             append_to_csv([tag, top_activity_name, vh_file_name, ss_file_name], CSV_FILE_PATH)
-            print(f"Screenshot saved to: {ss_file_path}")
-            print(f"View hierarchy saved to: {vh_file_path}")
-            print(f"Captured at {tag} with top activity: {top_activity_name}")
-            print(f"Data appended to CSV file: {CSV_FILE_PATH}")
+            # print(f"Screenshot saved to: {ss_file_path}")
+            # print(f"View hierarchy saved to: {vh_file_path}")
+            # print(f"Captured at {tag} with top activity: {top_activity_name}")
+            # print(f"Data appended to CSV file: {CSV_FILE_PATH}")
 
-        time_to_next_capture = next_capture_time - time.time()
-        time.sleep(max(time_to_next_capture, 0))
+            time_to_next_capture = next_capture_time - time.time()
+            time.sleep(max(time_to_next_capture, 0))
+            next_capture_time += interval
 
 if __name__ == '__main__':
     if DEVICE_SERIAL is None:
@@ -85,5 +98,9 @@ if __name__ == '__main__':
 
     try:
         capture_view_hierarchy_loop(device)
+    except KeyboardInterrupt:
+        print("Monitoring stopped.")
+        device.disconnect()
+
     finally:
         device.disconnect()

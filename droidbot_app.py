@@ -213,10 +213,10 @@ class DroidBotAppConn(Adapter):
     def get_views(self):
         get_views_times = 0
         while not self.last_acc_event:
-            self.logger.warning("last_acc_event is None, waiting")
+            print("last_acc_event is None, waiting")
             get_views_times += 1
             if get_views_times > MAX_NUM_GET_VIEWS:
-                self.logger.warning("cannot get non-None last_acc_event")
+                print("cannot get non-None last_acc_event")
                 return None
             time.sleep(GET_VIEW_WAIT_TIME)
         
