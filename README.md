@@ -42,7 +42,9 @@ Before you can use this tool, ensure you have the following installed:
 
 ### Usage
 
-Run the start.py script to begin capturing the UI state and screenshots:
+1. Connect to your device by usb or adb.
+
+2. Run the start.py script to begin capturing the UI state and screenshots:
 
    ```sh
    python start.py
