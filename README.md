@@ -1,6 +1,6 @@
-# State-Capture
+# StateCapture
 
-This repository contains the source code for the State-Capture project, which is based on the [droidbot](https://github.com/honeynet/droidbot) and is designed to capture and record the UI state of Android devices connected via ADB. This tool is useful for developers and testers who need to track UI changes and activity information for their Android applications.
+This repository contains the source code for the State-Capture project, which is based on the [droidbot](https://github.com/honeynet/droidbot) and designed to capture and record the UI state of Android devices connected via ADB. This tool is useful for developers and testers who need to track UI changes and activity information for their Android applications.
 
 ## Features
 
