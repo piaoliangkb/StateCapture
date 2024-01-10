@@ -5,6 +5,7 @@ import csv
 from device import Device
 from datetime import datetime
 import subprocess
+from flask import Flask
 
 DEVICE_SERIAL = None
 FREQUENCY = 0.5
@@ -36,13 +37,6 @@ def capture_view_hierarchy_loop(device):
     interval = 1.0 / FREQUENCY
     data_capture_allowed = False
 
-    if not os.path.exists(LOCAL_VH_SAVE_PATH):
-        os.makedirs(LOCAL_VH_SAVE_PATH)
-    if not os.path.exists(LOCAL_SCREENSHOT_SAVE_PATH):
-        os.makedirs(LOCAL_SCREENSHOT_SAVE_PATH)
-    if not os.path.exists(CSV_FILE_PATH):
-        append_to_csv(["Timestamp", "Activity Name", "View Hierarchy File", "Screenshot File"], CSV_FILE_PATH)
-
     print("Monitoring started. Waiting for valid data...")
 
     while True:
@@ -51,39 +45,46 @@ def capture_view_hierarchy_loop(device):
         if not data_capture_allowed:
             view_hierarchy = device.get_views()
             if view_hierarchy is not None:
-                input("Valid data detected. Press enter when you are ready to capture...")
                 data_capture_allowed = True
-                current_time = time.time()
-                next_capture_time = current_time + interval
+                break
             else:
                 time.sleep(interval)
                 continue
         
         if data_capture_allowed:
-            view_hierarchy = device.get_views()
-            screenshot_path = device.take_screenshot(tag)
-            top_activity_name = device.get_top_activity_name()
-            vh_file_name = f"view_hierarchy_{tag}.json"
-            vh_file_path = os.path.join(LOCAL_VH_SAVE_PATH, vh_file_name)
-            ss_file_name = f"screenshot_{tag}.jpg"
-            ss_file_path = os.path.join(LOCAL_SCREENSHOT_SAVE_PATH, ss_file_name)
+            print("Now capturing data...")
+            break
 
-            with open(vh_file_path, "w") as file:
-                json.dump(view_hierarchy, file)
-                
-            os.rename(screenshot_path, ss_file_path)
+    print("Finished capturing data preparation")                
 
-            append_to_csv([tag, top_activity_name, vh_file_name, ss_file_name], CSV_FILE_PATH)
-            # print(f"Screenshot saved to: {ss_file_path}")
-            # print(f"View hierarchy saved to: {vh_file_path}")
-            # print(f"Captured at {tag} with top activity: {top_activity_name}")
-            # print(f"Data appended to CSV file: {CSV_FILE_PATH}")
+# if __name__ == '__main__':
+#     if DEVICE_SERIAL is None:
+#         devices = get_available_devices()
+#         if len(devices) == 0:
+#             print("No device connected.")
+#             exit(1)
+#         DEVICE_SERIAL = devices[0]
+#         print("Using device: %s" % DEVICE_SERIAL)
 
-            time_to_next_capture = next_capture_time - time.time()
-            time.sleep(max(time_to_next_capture, 0))
-            next_capture_time += interval
+#     device = Device(device_serial=DEVICE_SERIAL)
+#     device.connect()
+#     print("Device connected successfully.")
 
-if __name__ == '__main__':
+#     try:
+#         capture_view_hierarchy_loop(device)
+#     except KeyboardInterrupt:
+#         print("Monitoring stopped.")
+#         device.disconnect()
+#     finally:
+#         device.disconnect()
+
+app = Flask(__name__)
+
+device = None
+
+def setup():
+    global device
+    DEVICE_SERIAL = None
     if DEVICE_SERIAL is None:
         devices = get_available_devices()
         if len(devices) == 0:
@@ -102,5 +103,11 @@ if __name__ == '__main__':
         print("Monitoring stopped.")
         device.disconnect()
 
-    finally:
-        device.disconnect()
+@app.route('/get_view')
+def get_view():
+    global device
+    return device.get_views()
+
+if __name__ == '__main__':
+    setup()
+    app.run(debug=True)

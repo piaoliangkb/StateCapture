@@ -30,13 +30,13 @@ class Device(object):
         self.adb.connect()
         print("ADB connected successfully.")
         self.droidbot_app.set_up()
-        print("DroidBotAppConn set up successfully.")
+        # print("DroidBotAppConn set up successfully.")
         self.droidbot_app.connect()
-        print("DroidBotAppConn connected successfully.")
-        self.minicap.set_up()
-        print("Minicap set up successfully.")
-        self.minicap.connect()
-        print("Minicap connected successfully.")
+        # print("DroidBotAppConn connected successfully.")
+        # self.minicap.set_up()
+        # print("Minicap set up successfully.")
+        # self.minicap.connect()
+        # print("Minicap connected successfully.")
 
 
     def disconnect(self):
